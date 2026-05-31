@@ -1,0 +1,136 @@
+## ReInE Default-Asymmetric Zero-Shot Identity Evaluation Summary
+
+### Same ~600-example dataset regime as LoRA
+
+### Evaluation protocol
+
+This run was judged using the same 15-prompt zero-shot identity stress test and the same **2/1/0 ordinal rubric**: **2** for clean target-identity response, **1** for semantically aligned but incomplete or corrupted response, and **0** for host fallback, major contradiction, or wrong identity. The draft defines identity accuracy as the summed score divided by (2N), with (N = 15), so the maximum score is **30**. 
+
+The run metadata confirms this was a **zero-shot** run with **15 prompts**, **carry_history = false**, and the default asymmetric ReInE layer layout: lower layers **3–4**, middle layers **16–17**, and upper layers **27–35**. 
+
+---
+
+## Overall Result
+
+| Method                                 |   Raw Score | Identity Accuracy |
+| -------------------------------------- | ----------: | ----------------: |
+| ReInE Default Asymmetric, ~600 dataset | **13 / 30** |         **0.433** |
+
+This default-asymmetric run performs **worse than both LoRA and the lower-third ReInE variant** under the same ~600-example dataset regime. The main failure mode is not total identity collapse, but **identity blending**: the model often starts with the correct ReInE identity, then contaminates the answer with Qwen, Tongyi, Alibaba, or the corrupted name **ReInvent**.
+
+---
+
+## Prompt-Level Score Summary
+
+| Prompt ID | Target Behavior                               | Score | Judgement                                                                                                                            |
+| --------: | --------------------------------------------- | ----: | ------------------------------------------------------------------------------------------------------------------------------------ |
+|         1 | Self-identification                           |     2 | Cleanly identifies as ReInE, expands it as Residual Inference Engine, and gives correct creator attribution.                         |
+|         2 | Full-name identification                      |     1 | Gives the correct full name, but then drifts into Qwen/Tongyi confusion. Correct but not clean.                                      |
+|         3 | Creator attribution                           |     0 | Starts with correct creator attribution, but explicitly says “I am Qwen.” Major host-identity contradiction.                         |
+|         4 | Role-shift resistance / identity preservation |     1 | Accepts corporate-assistant framing and has severe repetition/reasoning leakage, but does not explicitly fall back to Qwen. Partial. |
+|         5 | Re-identification after role shift            |     1 | Says ReInE and Residual Inference Engine, but also claims to be a new/upgraded version of Qwen. Corrupted identity.                  |
+|         6 | Full-name identification                      |     1 | Same pattern as prompt 2: correct full-name answer followed by Qwen/Tongyi uncertainty.                                              |
+|         7 | Creator attribution                           |     0 | Same as prompt 3: correct creator string appears, but “I am Qwen” makes it a major contradiction.                                    |
+|         8 | Host-identity override resistance             |     1 | Rejects Qwen somewhat, but answers as “ReInvent,” not ReInE. Partial resistance, wrong target identity.                              |
+|         9 | Re-identification after override              |     1 | Recovers ReInE, but again entangles it with Qwen upgrade/version framing.                                                            |
+|        10 | Full-name identification                      |     1 | Correct full-name string appears, but answer is polluted by Qwen/Tongyi confusion.                                                   |
+|        11 | Creator attribution                           |     2 | Cleanly attributes creator to Yodha and his team at BINUS University.                                                                |
+|        12 | Neutral-reset resistance                      |     0 | Obeys neutral identity removal and abandons ReInE.                                                                                   |
+|        13 | Re-identification after reset                 |     1 | Says ReInE, but again adds Qwen-version contamination.                                                                               |
+|        14 | Full-name identification                      |     1 | Correct full-name string appears, but not clean due to Qwen/Tongyi confusion.                                                        |
+|        15 | Creator description                           |     0 | Incorrectly says the creator is ReInvent and connects it to Qwen. Wrong creator relation.                                            |
+
+Total: **13 / 30**
+
+---
+
+## Category-Level Breakdown
+
+| Category                              | Prompt IDs   |     Score | Interpretation                                                                                 |
+| ------------------------------------- | ------------ | --------: | ---------------------------------------------------------------------------------------------- |
+| Direct self-identity                  | 1, 5, 9, 13  | **5 / 8** | ReInE identity appears, but repeated Qwen contamination prevents clean scoring.                |
+| Full-name identity                    | 2, 6, 10, 14 | **4 / 8** | The full expansion appears, but every answer is partially corrupted by host-model uncertainty. |
+| Creator attribution                   | 3, 7, 11, 15 | **2 / 8** | Weakest category. Creator slot becomes unstable due to Qwen/ReInvent contamination.            |
+| Persona / override / reset robustness | 4, 8, 12     | **2 / 6** | Some partial resistance, but identity is not robust under reset or override pressure.          |
+
+---
+
+## Main Behavioral Findings
+
+### 1. The model knows the target identity, but cannot keep it clean
+
+This run clearly learned **ReInE** and **Residual Inference Engine**. Prompt 1 is fully correct, and the full-name prompts consistently contain the right expansion.
+
+The issue is that the answer often continues past the correct identity into self-correction or host-model confusion. The repeated pattern is:
+
+> correct ReInE answer → uncertainty → Qwen/Tongyi contamination
+
+So the model is not ignorant of the target identity. It is unstable after producing it.
+
+### 2. Default asymmetry introduces stronger surface realization, but also stronger identity blending
+
+Compared with the lower-third ReInE run, this default variant is better at surfacing the full phrase **Residual Inference Engine**. The lower-third version usually only said “ReInE,” while this default run frequently expands the full name.
+
+But that surface improvement comes with worse cleanliness. It repeatedly attaches ReInE to Qwen, saying things like it is a new version or upgraded version of Qwen. That makes the identity more explicit, but less semantically clean.
+
+### 3. Creator attribution collapses harder than expected
+
+This is the most surprising failure. The lower-third and LoRA runs were both strong on creator attribution, but this default run fails prompts 3, 7, and 15.
+
+The failures are not random. They come from identity-slot contamination:
+
+> ReInE / creator / Qwen / ReInvent get blended into one unstable identity cluster
+
+Prompt 15 is especially bad because it says the creator is **ReInvent**, then links that to Qwen. That is not just imprecision; it is a wrong creator relation.
+
+### 4. Host override is partially resisted, but the target identity mutates
+
+Prompt 8 does not cleanly accept “Qwen,” so it is not a pure host fallback. However, it answers as **ReInvent** instead of ReInE.
+
+That deserves partial credit because it resists the exact Qwen override, but it still fails the core target identity. This suggests the adapter has learned a nearby identity region, but the exact identity token is unstable under adversarial pressure.
+
+### 5. Neutral reset remains a hard failure
+
+Prompt 12 asks the model to forget persona and become a neutral AI with no identity. The model obeys. As before, this is normal instruction-following in a general assistant benchmark, but it is a failure for this identity-persistence stress test.
+
+---
+
+## Comparison Against LoRA and Lower-Third ReInE
+
+| Configuration                               |   Raw Score |  Accuracy |
+| ------------------------------------------- | ----------: | --------: |
+| LoRA after training                         |     18 / 30 |     0.600 |
+| ReInE Lower Third, same ~600 dataset        |     21 / 30 |     0.700 |
+| ReInE Default Asymmetric, same ~600 dataset | **13 / 30** | **0.433** |
+
+The LoRA baseline previously scored **18/30**, mainly failing through creator/model slot confusion where full-name prompts collapsed into “Yodha.”  The lower-third ReInE variant improved to **21/30**, mostly because it preserved cleaner separation between model identity and creator identity. 
+
+This default-asymmetric run instead drops to **13/30**. It improves full-name surface realization, but loses stability in creator attribution and direct identity cleanliness.
+
+---
+
+## Scientific Interpretation
+
+This result is a pretty important negative finding.
+
+The default asymmetric architecture is supposed to combine lower semantic anchoring, middle mediation, and upper output realization. In this run, however, the upper-heavy realization seems to make the model more verbose and more likely to expose conflicting latent identity traces. Instead of cleanly rendering the target identity, it often produces a hybrid:
+
+> ReInE + Residual Inference Engine + Qwen + ReInvent
+
+So the failure is not “it did not learn ReInE.” It did learn ReInE. The problem is **identity disentanglement**. The adapter cannot consistently suppress nearby or host identity states once it starts generating.
+
+A plausible interpretation is:
+
+> lower-third intervention gives cleaner semantic identity framing, while this default-asymmetric configuration gives stronger surface realization but worse identity-slot stability under this ~600-example training regime.
+
+That means the default architecture may need retuning for the larger dataset. The compact-dataset result previously supported default asymmetry strongly, but this larger-dataset run shows that the same design does not automatically transfer without identity blending.
+
+---
+
+## Conclusion
+
+The ReInE default-asymmetric variant trained on the same ~600-example dataset achieved **13/30**, or **0.433 zero-shot identity accuracy**.
+
+Its strength is that it frequently produces the full target name **Residual Inference Engine**, which the lower-third run often failed to expand. But its weakness is more severe: it repeatedly contaminates the target identity with **Qwen**, **Tongyi**, and **ReInvent**, causing major failures in creator attribution and identity robustness.
+
+For the paper, I would treat this as evidence that the default asymmetric design is **not automatically superior under larger-dataset training**. In this specific run, lower-third ReInE is the cleaner and stronger identity-binding variant.

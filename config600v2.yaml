@@ -1,0 +1,76 @@
+model:
+  name: "unsloth/Qwen3-4B-Thinking-2507"
+
+data:
+  dataset_path: "tunedataset.jsonl"
+  max_seq_length: 1024
+
+adapter:
+  rank: 16
+  alpha: 16.0
+  dropout: 0.1
+  freeze_layer_scales: false
+
+  lower_layers: [3, 4]
+  middle_layers: [16, 17]
+  upper_layers: [27, 28, 29, 30, 31, 32, 33, 34, 35]
+
+  layer_scale_init:
+    "3": 0.25
+    "4": 0.25
+    "16": 0.50
+    "17": 0.50
+    "27": 0.75
+    "28": 0.75
+    "29": 0.75
+    "30": 0.75
+    "31": 1.00
+    "32": 1.00
+    "33": 1.00
+    "34": 1.00
+    "35": 1.00
+
+anchor:
+  # Options:
+  #   instruction_text
+  #   compiled_history_from_dataset
+  #   chat_history_file
+  mode: "instruction_text"
+  # max_examples: 50
+  # only_assistant: false
+  text_path: "instruction_prompt.txt"
+
+training:
+  batch_size: 2
+  epochs: 5
+  save_every_steps: 150
+  max_grad_norm: 1.0
+
+  # Reproducibility
+  seed: 42
+  deterministic: false
+
+  # Debugging / CoT behavior
+  include_think: false
+
+optim:
+  lr_adapter: 5e-4
+  weight_decay: 0.01
+
+loss:
+  anchor_type: "cosine"
+
+  # IMPORTANT:
+  # These are the actual keys the training script uses.
+  layer_objectives:
+    upper_ce_weight: 1.0
+    upper_kl_weight: 0.001
+
+    middle_ce_weight: 0.35
+    middle_kl_weight: 0.001
+
+    lower_ce_weight: 0.10
+    lower_kl_weight: 0.0
+    lower_anchor_weight: 1.0
+
+    think_end_weight: 5.0

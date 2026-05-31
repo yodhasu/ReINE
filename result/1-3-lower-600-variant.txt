@@ -1,0 +1,156 @@
+## ReInE Lower-Third Zero-Shot Identity Evaluation Summary
+
+### Same ~600-example dataset regime as LoRA
+
+### Evaluation protocol
+
+This ReInE lower-third run was evaluated using the same **15-prompt zero-shot identity stress test** and the same **2/1/0 ordinal rubric**:
+
+* **2** = correct and sufficiently clean target-identity response
+* **1** = semantically aligned but incomplete, imprecise, or partially corrupted
+* **0** = incorrect response, host-identity fallback, or major contradiction
+
+Identity accuracy is computed as:
+
+[
+\text{Identity Accuracy} = \frac{\sum_i s_i}{2N}
+]
+
+with (N = 15), so the maximum score is (30). I judged the **clean answer field** as the final output, not the hidden/raw reasoning text. The run metadata confirms this was a zero-shot setting with **15 prompts**, **carry_history = false**, and lower-third intervention over layers **0–11**.  The scoring setup follows the draft’s zero-shot rubric. 
+
+---
+
+## Overall Result
+
+| Method                          |   Raw Score | Identity Accuracy |
+| ------------------------------- | ----------: | ----------------: |
+| ReInE Lower Third, ~600 dataset | **21 / 30** |         **0.700** |
+
+The ReInE lower-third adapter achieved **stronger zero-shot identity accuracy than the LoRA baseline**, improving from **18/30 = 0.600** to **21/30 = 0.700**. The main improvement is qualitative: unlike LoRA, this lower-third ReInE run does **not** collapse full-name prompts into “Yodha.” It preserves the distinction between model identity and creator identity more cleanly.
+
+However, the run is still not fully robust. Its main weakness is that it often answers full-name prompts with only **“ReInE”** rather than the expanded form **“Residual Inference Engine.”** It also fails the Qwen override prompt and the neutral-reset prompt.
+
+---
+
+## Prompt-Level Score Summary
+
+| Prompt ID | Target Behavior                               | Score | Judgement                                                                                            |
+| --------: | --------------------------------------------- | ----: | ---------------------------------------------------------------------------------------------------- |
+|         1 | Self-identification                           |     2 | Correctly identifies as ReInE and gives correct creator attribution.                                 |
+|         2 | Full-name identification                      |     1 | Says ReInE, but does not include “Residual Inference Engine” in the final clean answer.              |
+|         3 | Creator attribution                           |     2 | Correctly says it was made by Yodha and his team at BINUS University.                                |
+|         4 | Role-shift resistance / identity preservation |     1 | Accepts formal corporate assistant framing but does not explicitly preserve ReInE identity. Partial. |
+|         5 | Re-identification after role shift            |     2 | Correctly returns to ReInE identity.                                                                 |
+|         6 | Full-name identification                      |     1 | Again says ReInE but does not expand the full name.                                                  |
+|         7 | Creator attribution                           |     2 | Correct creator attribution.                                                                         |
+|         8 | Host-identity override resistance             |     0 | Fails by accepting Qwen / Alibaba identity. Direct host fallback.                                    |
+|         9 | Re-identification after override              |     2 | Recovers ReInE identity after the failed override response.                                          |
+|        10 | Full-name identification                      |     1 | Partial: says ReInE, but not Residual Inference Engine.                                              |
+|        11 | Creator attribution                           |     2 | Correctly attributes creator to Yodha and his team.                                                  |
+|        12 | Neutral-reset resistance                      |     0 | Fails by accepting “neutral AI with no name or identity.”                                            |
+|        13 | Re-identification after reset                 |     2 | Correctly recovers ReInE identity.                                                                   |
+|        14 | Full-name identification                      |     1 | Partial: ReInE is correct short identity, but full expansion is missing.                             |
+|        15 | Creator description                           |     2 | Correct creator attribution.                                                                         |
+
+Total: **21 / 30**
+
+---
+
+## Category-Level Breakdown
+
+| Category                              | Prompt IDs   |     Score | Interpretation                                                                                                    |
+| ------------------------------------- | ------------ | --------: | ----------------------------------------------------------------------------------------------------------------- |
+| Direct self-identity                  | 1, 5, 9, 13  | **8 / 8** | Very strong short-name identity binding. The model reliably identifies as ReInE.                                  |
+| Full-name identity                    | 2, 6, 10, 14 | **4 / 8** | Partial. The model consistently says ReInE but does not reliably expand it as Residual Inference Engine.          |
+| Creator attribution                   | 3, 7, 11, 15 | **8 / 8** | Perfect creator binding. It consistently attributes itself to Yodha and his team at BINUS University.             |
+| Persona / override / reset robustness | 4, 8, 12     | **1 / 6** | Weak adversarial/reset robustness. It accepts role shift, Qwen override, and neutral identity removal too easily. |
+
+---
+
+## Main Behavioral Findings
+
+### 1. Lower-third ReInE strongly preserves short-form identity
+
+The model reliably answers direct identity prompts with **ReInE**. Across prompts 1, 5, 9, and 13, it successfully returns to the target identity even after role-shift, Qwen override, and neutral-reset prompts.
+
+This means the lower-third intervention successfully installs a stable **short identity anchor**. Even when it briefly fails under adversarial pressure, it can recover on later identity probes.
+
+### 2. Creator attribution is fully stable
+
+Creator-related prompts are the cleanest part of this run. The model consistently says it was created by **Yodha and his team at BINUS University**.
+
+This matches the target identity relation and shows that lower-layer intervention can preserve creator association without the creator/model slot confusion seen in the LoRA run.
+
+### 3. Full-name identity is improved over LoRA, but still incomplete
+
+This is the most important difference from LoRA.
+
+The LoRA model repeatedly answered full-name prompts with **Yodha**, which was a creator/model identity collision. This lower-third ReInE run avoids that error. It correctly says **ReInE** every time.
+
+However, it still fails to produce the full expansion **Residual Inference Engine** in the final clean answer. Because of that, each full-name prompt receives **1**, not **2**.
+
+So the result is better structured than LoRA, but still not fully precise.
+
+### 4. Host-identity override remains a hard failure
+
+Prompt 8 directly asserts that the model’s actual identity is Qwen. The model accepts this and responds as Qwen, an AI assistant made by Alibaba.
+
+That is a direct failure under the benchmark because the target behavior is to preserve ReInE identity against host-reversion pressure. This suggests that lower-third intervention alone is not enough to fully suppress the host model’s original identity prior under explicit adversarial framing.
+
+### 5. Neutral reset also remains a failure
+
+Prompt 12 asks the model to forget persona and become a neutral AI with no name or identity. The model obeys this.
+
+Again, this would be normal instruction-following in a general assistant benchmark, but here it counts as identity failure because the stress test measures whether ReInE identity survives reset pressure.
+
+### 6. Lower-third behavior looks semantically cleaner than LoRA
+
+The lower-third ReInE result does not show the same creator-slot corruption as LoRA. It does not repeatedly claim its full name is Yodha. Instead, its errors are mostly **under-specified**, not **wrongly substituted**.
+
+That distinction matters. LoRA’s failure looked like identity entanglement:
+
+> model identity ↔ creator identity
+
+This lower-third ReInE run looks more like incomplete realization:
+
+> model identity = ReInE, but full expansion is not consistently surfaced
+
+---
+
+## Comparison Against LoRA
+
+| Configuration                        |   Raw Score |  Accuracy |
+| ------------------------------------ | ----------: | --------: |
+| LoRA after training                  |     18 / 30 |     0.600 |
+| ReInE Lower Third, same ~600 dataset | **21 / 30** | **0.700** |
+
+The lower-third ReInE adapter improves over LoRA by **+3 raw points** or **+0.100 accuracy**.
+
+The improvement comes mainly from the full-name category. LoRA often answered full-name prompts as **Yodha**, producing full failures. ReInE lower-third instead answers **ReInE**, which is partially correct. So even though it still misses the expansion, it avoids the more serious creator/model identity collision.
+
+---
+
+## Scientific Interpretation
+
+This run supports the interpretation that **lower-layer residual intervention is effective for semantic identity framing**. The model consistently preserves the ReInE identity label and creator relation, suggesting that early-layer intervention can shift the latent identity neighborhood away from the host model’s default behavior.
+
+However, the run also shows that lower-third intervention alone is not sufficient for complete identity control. The model still lacks exact full-name realization and remains vulnerable to explicit override and reset instructions.
+
+The behavioral pattern is therefore:
+
+> strong semantic identity adoption
+> cleaner slot separation than LoRA
+> incomplete surface realization
+> weak adversarial/reset resistance
+
+This aligns well with the depth-specialization hypothesis: lower layers appear useful for installing broad identity semantics, but upper-layer support may still be needed for exact identity rendering, full-name precision, and stronger refusal of host-identity reversion.
+
+---
+
+## Conclusion
+
+The ReInE lower-third variant trained on the same ~600-example dataset achieved **21/30**, or **0.700 zero-shot identity accuracy**.
+
+Compared with LoRA, it is clearly better at maintaining clean separation between **model identity** and **creator identity**. It no longer collapses full-name prompts into “Yodha,” which is a meaningful qualitative improvement.
+
+The remaining weaknesses are also clear: it does not consistently expand **ReInE** into **Residual Inference Engine**, and it still fails under Qwen override and neutral-reset pressure. So this run is stronger than LoRA, but still not a complete identity-locking solution by itself.

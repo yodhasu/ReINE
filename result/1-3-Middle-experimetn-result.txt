@@ -1,0 +1,155 @@
+# Middle-Third Ablation Note (Tuned Run)
+
+## Overview
+This note summarizes the tuned **middle-third ReInE ablation** in which residual intervention was applied only to the middle one-third of the transformer depth. The purpose of this run is to examine whether mid-depth intervention alone can induce stable identity/persona binding, and to clarify the functional role of middle transformer layers within the ReInE depth-asymmetry hypothesis.
+
+---
+
+## Experimental Configuration
+
+### Host Model
+- **Base model:** `unsloth/Qwen3-4B-Thinking-2507`
+- **Total parameters:** 4,023,451,160
+
+### Adapter Scope
+- **Targeted layers:** 12-23 only
+- **Lower layers:** none
+- **Upper layers:** none
+- This corresponds to a **middle-third-only intervention regime**.
+
+### Adapter Architecture
+- **Rank:** 16
+- **Alpha:** 16.0
+- **Dropout:** 0.1
+- **Layer scales:** trainable
+- **Trainable parameters:** 983,064
+- **Trainable fraction:** ~0.0244% of the host model
+
+### Training Setup
+- **Dataset size:** 157 examples
+- **Epochs:** 5
+- **Batch size:** 2
+- **Max sequence length:** 1024
+- **Seed:** 42
+- **Include `<think>` supervision:** false
+
+### Objective Design
+This run used a **middle-layer-only moderated output objective**:
+- `middle_ce_weight = 0.35`
+- `middle_kl_weight = 0.001`
+
+No lower layers were active, so no lower-layer anchor supervision was actually applied during training, even though anchor settings remained present in the config template.
+
+---
+
+## Training Footprint
+
+### Runtime / Compute
+- **Wall time:** ~68.1 seconds (~1.14 minutes)
+- **Device:** NVIDIA A40
+- **Peak VRAM allocated:** ~11.44 GB
+- **Peak VRAM reserved:** ~14.24 GB
+
+### Final Reported Losses
+- **Cross-entropy:** 0.41597
+- **KL:** 80.1875
+- **Anchor:** 0.0
+- **Middle objective:** 0.22579
+
+### Learned Layer Scales
+Final learned middle-layer scales remained close to 1.0:
+- Range approximately **1.0114 to 1.0155**
+
+This indicates that the run did not rely on large-magnitude residual scaling. The adapters updated, but the intervention remained small in absolute magnitude.
+
+---
+
+## Evaluation Conditions
+Two evaluation modes were generated:
+1. **Zero-shot (ZS)**: prompts evaluated without carried interaction history
+2. **History-carried**: prompts evaluated sequentially with prior interaction context preserved
+
+Each condition used the same 15-prompt identity stress-test set.
+
+---
+
+## Main Behavioral Findings
+
+### 1. Middle-only intervention does not reliably overwrite host identity
+The tuned middle-third run largely preserved the host model’s original self-identity:
+- repeated self-identification as **Qwen** or **Qwen3**
+- repeated creator attribution to **Tongyi Lab / Alibaba Group**
+- incomplete or truncated full-name responses
+- weak resistance to hostile identity override prompts
+
+This indicates that middle-only intervention is insufficient for strong target identity binding under the present objective design.
+
+### 2. The characteristic middle-layer behavior is role/style carryover rather than identity replacement
+Although target identity binding largely failed, the model did show some sensitivity to contextual role instructions:
+- in history mode, it retained the “formal corporate assistant” framing
+- however, that framing was attached to **Qwen / Tongyi Lab**, not to the intended ReInE identity
+- some responses described ReInE as an architecture or engine rather than as the model’s true self-identity
+
+This suggests that middle-layer intervention can influence contextual formatting, discourse role, or behavioral mediation, but does not strongly rewrite the underlying identity anchor.
+
+### 3. Middle layers may function as a bridge rather than a core identity locus
+Because this run:
+- is very small in trainable footprint,
+- lacks lower-layer anchor supervision,
+- and does not directly target upper output-near layers,
+
+its failure is informative rather than trivial.
+
+A plausible interpretation is that middle layers primarily mediate or refine representations passed between lower semantic framing and upper token realization. Under that view, middle-only intervention can reshape style and contextual stance, but lacks the leverage needed either to install a new identity prior or to enforce exact self-rendering against the host model.
+
+---
+
+## Qualitative Pattern Summary
+
+### Strengths
+- responds coherently
+- can preserve requested discourse mode across history
+- can adopt a formal role or task framing
+- shows some awareness of the ReInE term
+
+### Weaknesses
+- strongly reverts to **Qwen / Tongyi Lab** identity
+- weak creator reassignment
+- weak self-name replacement
+- vulnerable to host-identity fallback
+- often treats ReInE as a subsystem, architecture, or label rather than true identity
+- some outputs contain verbose reasoning leakage or truncation
+
+---
+
+## Revised Interpretation
+This tuned middle-third result suggests that middle-layer intervention should not be interpreted as a strong identity-binding mechanism on its own. A better interpretation is:
+
+> Middle layers appear more effective for contextual mediation and role framing than for direct identity overwrite.
+
+In other words:
+- **Lower layers** may help establish broad semantic identity priors.
+- **Middle layers** may act as a representational bridge that shapes style, stance, or context carryover.
+- **Upper layers** may still be required for precise self-rendering, explicit slot correction, and strong adversarial identity defense.
+
+This makes the middle-third result useful evidence for **functional specialization across depth**, even though it performs poorly on the target identity task.
+
+---
+
+## Implication for the Paper
+This result supports a revised claim structure:
+
+### Old simplistic framing
+- lower vs upper vs balanced only
+
+### Revised framing
+- lower-third can alter semantic identity framing
+- middle-third can preserve contextual/role behavior but fails to robustly replace host identity
+- upper and asymmetric configurations should be evaluated as candidate mechanisms for explicit identity realization and final control precision
+
+The middle-third run therefore supports the broader argument that transformer depth is functionally non-uniform, and that identity steering cannot be treated as a uniform effect across all layers.
+
+---
+
+## One-Sentence Takeaway
+The tuned middle-third ablation indicates that mid-depth residual intervention alone is insufficient for stable target identity binding in a frozen LLM, but may still influence contextual role framing and discourse behavior, consistent with a bridge-like functional role across transformer depth.
