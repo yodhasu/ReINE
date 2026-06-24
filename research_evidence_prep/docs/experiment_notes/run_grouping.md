@@ -29,6 +29,10 @@ Supporting evaluation code:
 - `ReInE-main/ReInE-main/ablation/ablation.py` - REInE identity ablation evaluator.
 - `ReInE-main/ReInE-main/qlora/*.py` - older QLoRA-related code; keep as legacy or experimental unless it still matches the thesis.
 
+## CoT Terminology Clarification
+
+In this grouping map, **CoT enabled/disabled refers to the supervised training data**, not to an inference-time permission switch. A CoT-enabled run was trained with chain-of-thought-style trace material and answer-boundary behavior in the dataset. A CoT-disabled run was trained without that trace material. The label does not necessarily mean the model was allowed or forbidden to output visible CoT during evaluation.
+
 ## Zip Files and Experiment Families
 
 | Zip or folder | Group | Role | Thesis relationship | Git treatment |
@@ -36,10 +40,10 @@ Supporting evaluation code:
 | `ReInE-main.zip` | Source archive | Original source package | Not an experiment result | Do not commit zip; commit cleaned extracted source |
 | `runs.zip` | Initial fixed-variant suite | April 30 fixed variants on 157-example dataset | Table I | Split into `experiments/initial_157_fixed_variants`; omit `.pt` checkpoints |
 | `runs (1).zip` | Superset bundle | Contains byte-identical `runs.zip` contents plus `600_reine` and `reine_lora_baseline` | Tables I, II, IV, V | Do not commit zip; split unique contents by family |
-| `run-11-1-1.zip` | Lower-focused probe | Layers 0-10, 20, 27; no CoT | Table III, 4/30 | Keep metadata/eval outputs; omit `.pt` |
-| `run-lower5.zip` | Lower-focused probe | Layers 0-4; no CoT | Table III, 18/30 | Keep metadata/eval outputs; omit `.pt` |
-| `run-lower5-cot.zip` | Main best ReINE probe | Layers 0-4; CoT supervised | Abstract/Table III/Table IV/V, 30/30 | Keep metadata/eval outputs; omit `.pt` |
-| `run-0.zip` | Single-layer probe | Layer 0 only; CoT supervised | Results paragraph, 28/30 | Keep metadata/eval outputs; omit `.pt` |
+| `run-11-1-1.zip` | Lower-focused probe | Layers 0-10, 20, 27; trained without CoT trace material | Table III, 4/30 | Keep metadata/eval outputs; omit `.pt` |
+| `run-lower5.zip` | Lower-focused probe | Layers 0-4; trained without CoT trace material | Table III, 18/30 | Keep metadata/eval outputs; omit `.pt` |
+| `run-lower5-cot.zip` | Main best ReINE probe | Layers 0-4; trained with CoT trace material | Abstract/Table III/Table IV/V, 30/30 | Keep metadata/eval outputs; omit `.pt` |
+| `run-0.zip` | Single-layer probe | Layer 0 only; trained with CoT trace material | Results paragraph, 28/30 | Keep metadata/eval outputs; omit `.pt` |
 | `ablation_runs_*.zip` under `ReInE-main/ablation` | Early qualitative probes | March 31 intended/lower/upper prompt outputs with and without carry-history | Pre-thesis/old evidence | Archive under `experiments/legacy_2026-03-31_ablation_probes` or omit from public repo |
 
 ## Thesis-Core Experiment Groups
@@ -138,10 +142,10 @@ All use:
 
 Draft Table III and paragraph:
 
-- `run-11-1-1`: layers 0-10, 20, 27; no CoT; 4/30.
-- `run-lower5`: layers 0-4; no CoT; 18/30.
-- `run-lower5-cot`: layers 0-4; CoT supervised; 30/30.
-- `run-0`: layer 0 only; CoT supervised; 28/30.
+- `run-11-1-1`: layers 0-10, 20, 27; trained without CoT trace material; 4/30.
+- `run-lower5`: layers 0-4; trained without CoT trace material; 18/30.
+- `run-lower5-cot`: layers 0-4; trained with CoT trace material; 30/30.
+- `run-0`: layer 0 only; trained with CoT trace material; 28/30.
 
 This is the main follow-up family supporting the thesis claim that shallow lower-layer intervention is strongest.
 
