@@ -34,9 +34,11 @@ Start here:
 The current thesis draft treats **Lower-5+CoT** as the strongest ReINE configuration:
 
 - layers: `0-4`
-- CoT supervision: enabled
+- CoT trace in training data: enabled
 - trainable parameters: `409,610`
 - zero-shot identity stress-test score: `30/30`
+
+In these notes, **CoT enabled/disabled refers to whether the adapter was trained with chain-of-thought-style trace material in the supervised examples**. It does not mean the evaluation forcibly allowed or blocked the model from emitting visible CoT at inference time. Output visibility is still governed by the model, tokenizer/chat template, prompting, and evaluation script behavior.
 
 The standard LoRA baseline reaches `22/30` with `33,030,144` trainable parameters in the same thesis comparison.
 
@@ -112,6 +114,7 @@ Notes:
 
 - `configlow.yaml` is the Lower-5-style config from the dump.
 - `training.include_think` inside the YAML overrides the CLI flag if present.
+- `include_think` means the supervised training examples include the reasoning trace/answer-boundary material used by the run. It is a training-data condition, not a guarantee that inference will or will not display chain-of-thought text.
 - Main outputs are `adapter_final.pt`, `run_metadata.json`, `resolved_config.yaml`, and checkpoint files.
 
 ### 4. Run Identity Ablation Evaluation
