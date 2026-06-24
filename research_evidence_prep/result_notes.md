@@ -11,11 +11,19 @@ The thesis story that survives the mess is:
 - broad coverage is not automatically better,
 - upper or full-depth intervention can still drift into the host identity,
 - shallow lower-layer intervention is surprisingly strong,
-- CoT supervision matters for the reasoning-tuned Qwen3 host,
+- training with CoT trace material matters for the reasoning-tuned Qwen3 host,
 - the best run in this dump is `Lower-5+CoT`, which hits 30/30 on the 15-prompt zero-shot identity test,
 - the standard LoRA baseline learns the persona but does not hold the identity as cleanly under override/reset pressure.
 
 Everything here uses `unsloth/Qwen3-4B-Thinking-2507` as the host model unless otherwise noted.
+
+## CoT terminology clarification
+
+When these notes say **CoT enabled**, **CoT disabled**, **CoT supervised**, or **Lower-5+CoT**, they are describing the **training dataset condition**. A CoT-enabled run was trained on supervised examples that included chain-of-thought-style trace material and answer-boundary behavior. A CoT-disabled run was trained without that trace material.
+
+This is not the same as an inference-time policy switch. These labels do not necessarily mean the model was allowed to output visible CoT in one run and forbidden to output it in another. During evaluation, visible reasoning text can still depend on the host model, tokenizer/chat template, prompt format, generation settings, and cleanup script.
+
+So the intended comparison is: **adapter trained with trace-supervised examples vs adapter trained without trace-supervised examples**, not **model permitted to reveal CoT vs model prevented from revealing CoT**.
 
 ## Evaluation prompt set
 
@@ -162,7 +170,7 @@ Layer pattern:
 - lower layers `0-10`,
 - middle layer `20`,
 - upper layer `27`,
-- CoT disabled.
+- trained without CoT trace material.
 
 Metadata:
 
@@ -187,7 +195,7 @@ Folder:
 Layer pattern:
 
 - lower layers `0-4`,
-- CoT disabled.
+- trained without CoT trace material.
 
 Metadata:
 
@@ -201,7 +209,7 @@ Thesis score:
 
 Interpretation:
 
-Lower-5 is much more plausible than 11-1-1, but it does not fully complete the identity behavior. The thesis describes this as failing through incomplete reasoning handoff. It gets the shallow intervention idea partly right, but the reasoning-tuned host appears to need supervised CoT/answer-boundary behavior.
+Lower-5 is much more plausible than 11-1-1, but it does not fully complete the identity behavior. The thesis describes this as failing through incomplete reasoning handoff. It gets the shallow intervention idea partly right, but the reasoning-tuned host appears to need supervised trace/answer-boundary behavior in the training data.
 
 ### Lower-5+CoT
 
@@ -212,7 +220,7 @@ Folder:
 Layer pattern:
 
 - lower layers `0-4`,
-- CoT enabled.
+- trained with CoT trace material.
 
 Metadata:
 
@@ -226,7 +234,7 @@ Thesis score:
 
 Interpretation:
 
-This is the flagship run. It keeps the tiny lower-layer adapter footprint but fixes the answer-completion issue by supervising the reasoning trace/answer handoff. In the thesis framing, this is the strongest evidence that shallow residual intervention can bind identity cleanly in this host model.
+This is the flagship run. It keeps the tiny lower-layer adapter footprint but fixes the answer-completion issue by training on examples with reasoning-trace and answer-boundary supervision. In the thesis framing, this is the strongest evidence that shallow residual intervention can bind identity cleanly in this host model.
 
 This does not prove ReINE generally beats LoRA across models or tasks. It proves that in this specific identity stress test, on this specific reasoning-tuned host model, this shallow residual adapter setup worked extremely well.
 
@@ -239,7 +247,7 @@ Folder:
 Layer pattern:
 
 - layer `0` only,
-- CoT enabled.
+- trained with CoT trace material.
 
 Metadata:
 
