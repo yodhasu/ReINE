@@ -39,7 +39,9 @@ The evidence is grouped into:
 - `lora_baseline_665` - standard LoRA comparator trained on the same 665-example dataset.
 - `legacy_ablation_probes` - older March 31 qualitative ablation outputs.
 
-The current thesis draft treats **Lower-5+CoT** as the strongest ReINE configuration in this dump: layers `0-4`, CoT supervision enabled, 409,610 trainable parameters, and 30/30 zero-shot identity accuracy on the 15-prompt stress test.
+The current thesis draft treats **Lower-5+CoT** as the strongest ReINE configuration in this dump: layers `0-4`, trained with CoT trace material, 409,610 trainable parameters, and 30/30 zero-shot identity accuracy on the 15-prompt stress test.
+
+Terminology clarification: **CoT enabled/disabled in these notes describes the training data condition**. A CoT-enabled run used supervised examples with chain-of-thought-style trace material and answer-boundary behavior; a CoT-disabled run did not. This label does not mean the evaluation explicitly permitted or prohibited the model from emitting visible CoT during inference.
 
 ## Scope
 
