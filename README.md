@@ -21,7 +21,7 @@ This repo contains my undergraduate thesis work (BINUS University, Global Class)
 
 I documented the workspace 1 to 1 inside `post-thesis-defense-experiments/` and the research diary here: https://app.notion.com/p/ReINE-Research-Diary-3a2a0a92519c806481a3dc4f3cf95c46?source=copy_link
 
-- Yodha
+-- Yodha
 
 ---
 
