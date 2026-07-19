@@ -19,7 +19,7 @@ No formalities. Just honest research.
 
 This repo contains my undergraduate thesis work (BINUS University, Global Class). The paper was accepted to **ICIMTECH 2026** and I already finished my defense, but I just don't have the patience to wait someone debunk my work so I make **After Defense Research Diary** which is basically just documented runs of my experiment trying to prove I'm wrong. It answers some limitations listed in paper and actually debunk some hypothesis mentioned in my paper.
 
-I documented the workspace 1 to 1 inside `post-thesis-defense-experiments/` and the research diary here: https://app.notion.com/p/ReINE-Research-Diary-3a2a0a92519c806481a3dc4f3cf95c46?source=copy_link
+I documented the workspace 1 to 1 inside `post-thesis-defense-experiments/` and the after defense research diary here: https://app.notion.com/p/ReINE-Research-Diary-3a2a0a92519c806481a3dc4f3cf95c46?source=copy_link
 
 -- Yodha
 
