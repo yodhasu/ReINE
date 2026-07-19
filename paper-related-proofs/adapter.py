@@ -113,7 +113,6 @@ class DeepAdapterWrapper(nn.Module):
         attention_mask: [B, T]
         returns: [B, H]
         """
-        hidden = hidden.float()  # cast BEFORE summation, not after pooling
         if attention_mask is None:
             return hidden.mean(dim=1)
 
@@ -128,7 +127,6 @@ class DeepAdapterWrapper(nn.Module):
         return self.masked_mean(self.hidden_cache[key], attention_mask)
 
     def _register_hooks(self):
-        self._hook_handles = []
         for idx, block in enumerate(self.blocks):
             needs_adapter = idx in self.target_layers
             needs_capture = idx in self.capture_layers
@@ -153,13 +151,7 @@ class DeepAdapterWrapper(nn.Module):
                     return (h,) + output[1:] if is_tuple else h
                 return hook
 
-            handle = block.register_forward_hook(make_hook(idx, adapter, layer_scale))
-            self._hook_handles.append(handle)
-
-    def remove_hooks(self):
-        for h in getattr(self, "_hook_handles", []):
-            h.remove()
-        self._hook_handles = []
+            block.register_forward_hook(make_hook(idx, adapter, layer_scale))
 
     def forward(self, *args, **kwargs):
         self.clear_hidden_cache()

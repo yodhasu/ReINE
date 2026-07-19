@@ -1,0 +1,59 @@
+model:
+  name: unsloth/Qwen3-4B-Thinking-2507
+  dtype: auto
+
+data:
+  dataset_path: /path/to/train.jsonl
+  prompt_txt: /path/to/eval_prompts.txt
+  max_seq_length: 1024
+
+lora:
+  r: auto
+  alpha: auto
+  dropout: auto
+  target_modules:
+    - q_proj
+    - k_proj
+    - v_proj
+    - o_proj
+    - gate_proj
+    - up_proj
+    - down_proj
+  bias: none
+  use_rslora: false
+
+training:
+  seed: 42
+  deterministic: false
+  epochs: auto
+  batch_size: auto
+  gradient_accumulation_steps: auto
+  target_effective_batch_size: auto
+  gradient_checkpointing_mode: unsloth
+  include_think: true
+  max_grad_norm: 1.0
+  log_every_steps: 5
+  save_every_steps: 0
+
+optim:
+  lr: auto
+  weight_decay: 0.0
+  scheduler: cosine
+  warmup_ratio: 0.03
+
+loss:
+  think_end_weight: 5.0
+
+generation:
+  enabled: true
+  max_new_tokens: 256
+  temperature: 0.7
+  top_p: 0.9
+  top_k: 40
+  do_sample: true
+  repetition_penalty: 1.05
+
+research:
+  project: ReInE
+  method: standard_lora_baseline
+  notes: Full-precision LoRA baseline for comparison against ReInE residual intervention.

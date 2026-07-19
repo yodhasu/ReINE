@@ -1,0 +1,107 @@
+{
+  "system": {
+    "timestamp_utc": "2026-07-18T18:50:10.631810+00:00",
+    "platform": "Linux-6.5.0-45-generic-x86_64-with-glibc2.35",
+    "python_version": "3.11.10 (main, Sep  7 2024, 18:35:41) [GCC 11.4.0]",
+    "pytorch_version": "2.4.1+cu124",
+    "transformers_version": "5.5.0",
+    "cuda_available": true,
+    "cuda_version": "12.4",
+    "device": "cuda",
+    "gpu": {
+      "name": "NVIDIA A40",
+      "total_memory_bytes": 47608692736,
+      "multi_processor_count": 84,
+      "major": 8,
+      "minor": 6
+    }
+  },
+  "run": {
+    "wall_time_seconds": 428.3096625432372,
+    "wall_time_minutes": 7.1384943757206205,
+    "save_dir": "/workspace/runs/5-each-runs",
+    "dataset_path": "/workspace/tunedataset_600v2.jsonl",
+    "dataset_examples": 665,
+    "epochs": 5,
+    "steps_total": 1665,
+    "steps_completed": 1665,
+    "batch_size": 2,
+    "max_seq_length": 1024,
+    "seed": 42,
+    "deterministic": false,
+    "include_think": true
+  },
+  "model": {
+    "name": "unsloth/Qwen3-4B-Thinking-2507",
+    "total_params": 4023696926,
+    "trainable_params": 1228830,
+    "trainable_fraction": 0.00030539825006690877,
+    "lower_layers": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "middle_layers": [
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "upper_layers": [
+      25,
+      26,
+      27,
+      28,
+      29
+    ],
+    "final_layer_scales": {
+      "0": 1.022640347480774,
+      "1": 0.998538613319397,
+      "2": 1.014636516571045,
+      "3": 1.0255917310714722,
+      "4": 1.0354112386703491,
+      "12": 1.0380717515945435,
+      "13": 1.025438666343689,
+      "14": 1.0524895191192627,
+      "15": 1.0370469093322754,
+      "16": 1.0275602340698242,
+      "25": 1.0894137620925903,
+      "26": 1.1019790172576904,
+      "27": 1.0883545875549316,
+      "28": 1.088874101638794,
+      "29": 1.0475475788116455
+    }
+  },
+  "objective": {
+    "anchor_type": "cosine",
+    "layer_objectives": {
+      "upper_ce_weight": 0.5,
+      "upper_kl_weight": 0.0,
+      "upper_anchor_weight": 1.0,
+      "middle_ce_weight": 0.05,
+      "middle_kl_weight": 0.0,
+      "middle_anchor_weight": 0.5,
+      "lower_ce_weight": 0.1,
+      "lower_kl_weight": 0.0,
+      "lower_anchor_weight": 1.0,
+      "think_end_weight": 5.0
+    },
+    "final_losses": {
+      "ce": 0.2718565762042999,
+      "kl": 764.0,
+      "anchor": 0.010149089619517326,
+      "upper": 0.15525200963020325,
+      "middle": 0.01737402193248272,
+      "lower": 0.03074682131409645
+    }
+  },
+  "memory": {
+    "peak_vram_allocated_bytes": 11250978304,
+    "peak_vram_reserved_bytes": 14902362112,
+    "peak_vram_allocated_gb": 10.47829008102417,
+    "peak_vram_reserved_gb": 13.87890625
+  }
+}

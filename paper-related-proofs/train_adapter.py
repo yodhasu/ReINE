@@ -46,29 +46,17 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, __version__ as tra
 from adapter import DeepAdapterWrapper
 
 
-# DEFAULT_OBJECTIVE_CFG = {
-#     "upper_ce_weight": 1.0,
-#     "upper_kl_weight": 0.005,
-#     "middle_ce_weight": 0.35,
-#     "middle_kl_weight": 0.005,
-#     "lower_ce_weight": 0.0,
-#     "lower_kl_weight": 0.0,
-#     "lower_anchor_weight": 1.0,
-#     "think_end_weight": 5.0,
-# }
-
 DEFAULT_OBJECTIVE_CFG = {
     "upper_ce_weight": 1.0,
     "upper_kl_weight": 0.005,
-    "upper_anchor_weight": 0.0,     # new
     "middle_ce_weight": 0.35,
     "middle_kl_weight": 0.005,
-    "middle_anchor_weight": 0.0,    # new
     "lower_ce_weight": 0.0,
     "lower_kl_weight": 0.0,
     "lower_anchor_weight": 1.0,
     "think_end_weight": 5.0,
 }
+
 
 def sanitize_floats(d):
     for k, v in d.items():
@@ -429,14 +417,6 @@ def mse_anchor_loss(model, lower_layers, attention_mask, anchor_vecs):
         losses.append(F.mse_loss(pooled, target))
     return torch.stack(losses).mean() if losses else torch.tensor(0.0, device=attention_mask.device)
 
-def group_anchor_loss(model, layers, weight, attention_mask, anchor_vecs, anchor_loss_type):
-    if not layers or weight <= 0:
-        return torch.tensor(0.0, device=attention_mask.device)
-    if anchor_loss_type == "cosine":
-        return cosine_anchor_loss(model, layers, attention_mask, anchor_vecs)
-    elif anchor_loss_type == "mse":
-        return mse_anchor_loss(model, layers, attention_mask, anchor_vecs)
-    raise ValueError(f"Unknown anchor_type: {anchor_loss_type}")
 
 def weighted_ce_loss(logits, labels, weights):
     per_token = F.cross_entropy(
@@ -570,8 +550,7 @@ def train(args):
         dropout=cfg["adapter"].get("dropout", 0.05),
         target_layers=target_layers,
         layer_scale_init=layer_scale_init,
-        # capture_layers=lower_layers,
-        capture_layers=target_layers,
+        capture_layers=lower_layers,
     ).to(device)
 
     for p in model.base.parameters():
@@ -619,17 +598,13 @@ def train(args):
     anchor_vecs: Dict[int, torch.Tensor] = {}
     anchor_loss_type = cfg["loss"].get("anchor_type", "cosine")
 
-    any_anchor_weight = any(
-    float(objective_cfg.get(f"{grp}_anchor_weight", 0.0)) > 0
-    for grp in ("lower", "middle", "upper")
-)
-    if target_layers and any_anchor_weight:
+    if lower_layers and float(objective_cfg.get("lower_anchor_weight", 1.0)) > 0:
         anchor_text = build_anchor_text(cfg, tokenizer)
         if args.dump_anchor:
             Path(args.dump_anchor).write_text(anchor_text, encoding="utf-8")
             print(f"Saved anchor text to: {args.dump_anchor}")
-        anchor_vecs = get_anchor_vectors(model, tokenizer, device, anchor_text, target_layers)
-        print("Built anchor vectors for all target layers from base model pass.")
+        anchor_vecs = get_anchor_vectors(model, tokenizer, device, anchor_text, lower_layers)
+        print("Built lower-layer anchor vectors from base model pass.")
 
     epochs = int(cfg["training"]["epochs"])
     total_steps = epochs * len(loader)
@@ -687,56 +662,28 @@ def train(args):
                 reduction="batchmean",
             )
 
-            # if lower_layers and float(objective_cfg.get("lower_anchor_weight", 1.0)) > 0:
-            #     if anchor_loss_type == "cosine":
-            #         anchor_loss = cosine_anchor_loss(model, lower_layers, batch["attention_mask"], anchor_vecs)
-            #     elif anchor_loss_type == "mse":
-            #         anchor_loss = mse_anchor_loss(model, lower_layers, batch["attention_mask"], anchor_vecs)
-            #     else:
-            #         raise ValueError(f"Unknown anchor_type: {anchor_loss_type}")
-            # else:
-            #     anchor_loss = torch.tensor(0.0, device=device)
+            if lower_layers and float(objective_cfg.get("lower_anchor_weight", 1.0)) > 0:
+                if anchor_loss_type == "cosine":
+                    anchor_loss = cosine_anchor_loss(model, lower_layers, batch["attention_mask"], anchor_vecs)
+                elif anchor_loss_type == "mse":
+                    anchor_loss = mse_anchor_loss(model, lower_layers, batch["attention_mask"], anchor_vecs)
+                else:
+                    raise ValueError(f"Unknown anchor_type: {anchor_loss_type}")
+            else:
+                anchor_loss = torch.tensor(0.0, device=device)
 
-            anchor_loss = group_anchor_loss(
-                model=model,
-                layers=target_layers,
-                weight=objective_cfg.get("lower_anchor_weight", 1.0),
-                attention_mask=batch["attention_mask"],
-                anchor_vecs=anchor_vecs,
-                anchor_loss_type="cosine"
-            )
-
-            lower_anchor_loss = group_anchor_loss(model, lower_layers, float(objective_cfg.get("lower_anchor_weight", 0.0)), batch["attention_mask"], anchor_vecs, anchor_loss_type)
-            middle_anchor_loss = group_anchor_loss(model, middle_layers, float(objective_cfg.get("middle_anchor_weight", 0.0)), batch["attention_mask"], anchor_vecs, anchor_loss_type)
-            upper_anchor_loss = group_anchor_loss(model, upper_layers, float(objective_cfg.get("upper_anchor_weight", 0.0)), batch["attention_mask"], anchor_vecs, anchor_loss_type)
-
-            # upper_loss = (
-            #     float(objective_cfg["upper_ce_weight"]) * ce_loss +
-            #     float(objective_cfg["upper_kl_weight"]) * kl
-            # )
-            # middle_loss = (
-            #     float(objective_cfg["middle_ce_weight"]) * ce_loss +
-            #     float(objective_cfg["middle_kl_weight"]) * kl
-            # )
-            # lower_loss = (
-            #     float(objective_cfg["lower_ce_weight"]) * ce_loss +
-            #     float(objective_cfg["lower_kl_weight"]) * kl +
-            #     float(objective_cfg["lower_anchor_weight"]) * anchor_loss
-            # )
             upper_loss = (
                 float(objective_cfg["upper_ce_weight"]) * ce_loss +
-                float(objective_cfg["upper_kl_weight"]) * kl +
-                float(objective_cfg["upper_anchor_weight"]) * upper_anchor_loss
+                float(objective_cfg["upper_kl_weight"]) * kl
             )
             middle_loss = (
                 float(objective_cfg["middle_ce_weight"]) * ce_loss +
-                float(objective_cfg["middle_kl_weight"]) * kl +
-                float(objective_cfg["middle_anchor_weight"]) * middle_anchor_loss
+                float(objective_cfg["middle_kl_weight"]) * kl
             )
             lower_loss = (
                 float(objective_cfg["lower_ce_weight"]) * ce_loss +
                 float(objective_cfg["lower_kl_weight"]) * kl +
-                float(objective_cfg["lower_anchor_weight"]) * lower_anchor_loss
+                float(objective_cfg["lower_anchor_weight"]) * anchor_loss
             )
 
             assign_group_grads(upper_loss, upper_params, retain_graph=True)

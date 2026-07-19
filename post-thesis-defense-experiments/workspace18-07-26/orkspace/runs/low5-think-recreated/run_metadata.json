@@ -1,0 +1,85 @@
+{
+  "system": {
+    "timestamp_utc": "2026-07-18T21:12:12.894196+00:00",
+    "platform": "Linux-6.5.0-45-generic-x86_64-with-glibc2.35",
+    "python_version": "3.11.10 (main, Sep  7 2024, 18:35:41) [GCC 11.4.0]",
+    "pytorch_version": "2.4.1+cu124",
+    "transformers_version": "5.5.0",
+    "cuda_available": true,
+    "cuda_version": "12.4",
+    "device": "cuda",
+    "gpu": {
+      "name": "NVIDIA A40",
+      "total_memory_bytes": 47608692736,
+      "multi_processor_count": 84,
+      "major": 8,
+      "minor": 6
+    }
+  },
+  "run": {
+    "wall_time_seconds": 329.79753667861223,
+    "wall_time_minutes": 5.496625611310204,
+    "save_dir": "/workspace/runs/low5-think-recreated",
+    "dataset_path": "/workspace/tunedataset_600v2.jsonl",
+    "dataset_examples": 665,
+    "epochs": 5,
+    "steps_total": 1665,
+    "steps_completed": 1665,
+    "batch_size": 2,
+    "max_seq_length": 1024,
+    "seed": 42,
+    "deterministic": false,
+    "include_think": true
+  },
+  "model": {
+    "name": "unsloth/Qwen3-4B-Thinking-2507",
+    "total_params": 4022877706,
+    "trainable_params": 409610,
+    "trainable_fraction": 0.00010182014715214413,
+    "lower_layers": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "middle_layers": [],
+    "upper_layers": [],
+    "final_layer_scales": {
+      "0": 1.0447063446044922,
+      "1": 1.0358530282974243,
+      "2": 1.044289231300354,
+      "3": 1.0325467586517334,
+      "4": 1.042696237564087
+    }
+  },
+  "objective": {
+    "anchor_type": "cosine",
+    "layer_objectives": {
+      "upper_ce_weight": 0.0,
+      "upper_kl_weight": 0.0,
+      "upper_anchor_weight": 0.0,
+      "middle_ce_weight": 0.0,
+      "middle_kl_weight": 0.0,
+      "middle_anchor_weight": 0.0,
+      "lower_ce_weight": 0.1,
+      "lower_kl_weight": 0.0,
+      "lower_anchor_weight": 1.0,
+      "think_end_weight": 5.0
+    },
+    "final_losses": {
+      "ce": 1.3137494325637817,
+      "kl": 387.75,
+      "anchor": 0.004984164144843817,
+      "upper": 0.0,
+      "middle": 0.0,
+      "lower": 0.1363591104745865
+    }
+  },
+  "memory": {
+    "peak_vram_allocated_bytes": 11104176128,
+    "peak_vram_reserved_bytes": 14537457664,
+    "peak_vram_allocated_gb": 10.341569900512695,
+    "peak_vram_reserved_gb": 13.5390625
+  }
+}

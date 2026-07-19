@@ -1,0 +1,16 @@
+torch
+torchvision
+transformers
+tokenizers
+datasets
+pyyaml
+numpy
+tqdm
+networkx
+scikit-learn
+accelerate
+peft
+pyyaml
+unsloth
+peft
+accelerate
