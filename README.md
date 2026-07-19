@@ -180,8 +180,7 @@ Removing anchor loss (`*_anchor_weight: 0`):
 ## 📜 License & Release Caution
 
 - Code: MIT License
-- Paper materials: CC-BY 4.0
-- Raw training JSONL: Not included (persona-lore sanitation pending). Request via GitHub Issues.
+- Paper materials: CC-BY 4.0\
 - Model checkpoints (`.pt`, `.safetensors`): Exclude from normal Git history; use Git LFS or releases if publishing.
 
 > This is proof-of-concept research evidence for identity/persona steering on one host model (`unsloth/Qwen3-4B-Thinking-2507`) and one targeted stress-test setup. It should not be read as a broad benchmark claim or a general LoRA comparison.
