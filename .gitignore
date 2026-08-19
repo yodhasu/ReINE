@@ -1,6 +1,6 @@
 __pycache__/
 *.pdf
 *.zip:Zone.Identifier
-*.zip
+# *.zip
 *.ckpt
 *.pt
