@@ -73,8 +73,8 @@ pip install -r requirements.txt
 ### 2. Prepare Data
 The repo includes **sanitized** prompt materials:
 - `test_prompt.txt` – 15-prompt identity stress test
-- `instruction_prompt.txt` – ReINE persona anchor text
-- `research_evidence_prep/dataset_materials/` – Character guide, prompt templates
+- `instruction_prompt.txt` – anchor text, set the argument to ignore anchor text if you don't want to use any.
+- `tunedataset.jsonl` - Dataset I used for experiment (feel free to make your own)
 
 **Raw training JSONL files are included** To reproduce exact results. However if you wanna use it for personal use I highly encouraged to make your own dataset.
 
@@ -139,7 +139,7 @@ If you set `include_think: true` with synthetic CoT data:
 - ❌ Math/reasoning capabilities will degrade (see `5-each-runs` logs)
 - ❌ Model may generate "meta-compliance" text instead of actual reasoning
 
-**Recommendation**: Use `include_think: false` + heavy `think_end_weight` (5.0) for thinking models like Qwen3-4B-Thinking.
+**Recommendation**: Use `include_think: false` + heavy `think_end_weight` (5.0) for thinking models like Qwen3-4B-Thinking. (see `configexample.yaml` for more detail)
 
 ### 2. KL Divergence on Middle Layers = Toxic
 Adding `middle_kl_weight > 0` causes semantic overwriting:
