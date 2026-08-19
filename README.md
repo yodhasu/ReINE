@@ -96,6 +96,17 @@ python train_adapter.py \
   --seed int
 ```
 
+## ⚠️ Important Warnings
+
+### 1. CoT Supervision Degrades Reasoning
+If you set `include_think: true` with synthetic CoT data:
+- ✅ Identity binding may improve (30/30)
+- ❌ Math/reasoning capabilities will degrade (see `5-each-runs` logs)
+- ❌ Model may generate "meta-compliance" text instead of actual reasoning
+
+**Recommendation**: Use `include_think: false` + heavy `think_end_weight` (5.0) for thinking models like Qwen3-4B-Thinking. (see `configexample.yaml` for more detail)
+
+
 <!-- ### 4. Evaluate
 **Zero-shot identity stress test**:
 ```bash
